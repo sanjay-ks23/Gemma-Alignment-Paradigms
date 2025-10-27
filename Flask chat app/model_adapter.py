@@ -21,14 +21,18 @@ class GemmaModelLoader:
         Initialize the Gemma 3n therapeutic chatbot model loader
         Optimized for RTX 3070 Laptop (8GB VRAM) with CPU offloading
         """
-        # Absolute paths based on your directory structure
-        self.base_path = "/home/sanj-ai/Documents/SlateMate/Gemma_4b_Finetuning"
-        self.model_path = os.path.join(self.base_path, "gemma-3n")
-        self.adapter_path = self.model_path
-        self.offload_folder = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), 
-            "offload"
-        )
+        # Resolve paths from environment for deployment-friendly configuration
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        self.base_path = os.environ.get("GEMMA_BASE_PATH", module_dir)
+        self.model_path = os.environ.get("GEMMA_MODEL_PATH", os.path.join(self.base_path, "gemma-3n"))
+        self.adapter_path = os.environ.get("GEMMA_ADAPTER_PATH", self.model_path)
+        self.offload_folder = os.environ.get("GEMMA_OFFLOAD_DIR", os.path.join(module_dir, "offload"))
+        
+        # Normalize paths
+        self.base_path = os.path.abspath(self.base_path)
+        self.model_path = os.path.abspath(self.model_path)
+        self.adapter_path = os.path.abspath(self.adapter_path)
+        self.offload_folder = os.path.abspath(self.offload_folder)
         
         # Device configuration
         self.device = "cuda" if torch.cuda.is_available() else "cpu"

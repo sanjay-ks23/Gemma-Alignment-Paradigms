@@ -1,0 +1,321 @@
+openapi: 3.1.0
+info:
+  title: Gemma Therapeutic Chat API
+  version: 1.0.0
+  description: >-
+    REST API exposed by the Flask backend that orchestrates Graph RAG retrieval and
+    Gemma 3n response generation for therapeutic conversations.
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: http://localhost:5000
+    description: Local development
+tags:
+  - name: Health
+  - name: Conversation
+  - name: Session
+  - name: Metadata
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Returns service readiness and basic model statistics.
+      responses:
+        '200':
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Backend is not ready (model not initialised).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/chat:
+    post:
+      tags: [Conversation]
+      summary: Generate a therapeutic response
+      description: >-
+        Accepts a user message and optional generation parameters, runs the hybrid retrieval
+        pipeline, and returns the model's response alongside conversation statistics.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Model response generated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Missing or invalid payload fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected backend failure while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Model not initialised yet; retry after warm-up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/clear:
+    post:
+      tags: [Session]
+      summary: Clear conversation history
+      description: Resets the in-memory conversation state for the caller session.
+      responses:
+        '200':
+          description: History cleared.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearResponse'
+        '503':
+          description: Model not initialised; cannot clear history.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/history:
+    get:
+      tags: [Session]
+      summary: Retrieve current conversation history
+      responses:
+        '200':
+          description: Conversation history returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+        '503':
+          description: Model not initialised.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Session]
+      summary: Replace conversation history
+      description: Import an existing conversation history, enabling session restoration across devices.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetHistoryRequest'
+      responses:
+        '200':
+          description: Conversation history replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClearResponse'
+        '400':
+          description: Missing or invalid history payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Model not initialised.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/info:
+    get:
+      tags: [Metadata]
+      summary: Retrieve model and application metadata
+      responses:
+        '200':
+          description: Metadata retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppInfoResponse'
+        '503':
+          description: Model not initialised.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: User's input message.
+          minLength: 1
+        use_history:
+          type: boolean
+          default: true
+          description: Whether to use prior conversation turns as context.
+        temperature:
+          type: number
+          format: float
+          minimum: 0.1
+          maximum: 1.0
+          default: 0.7
+        max_length:
+          type: integer
+          minimum: 50
+          maximum: 1024
+          default: 512
+        top_p:
+          type: number
+          format: float
+          minimum: 0.1
+          maximum: 1.0
+          default: 0.9
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 50
+        repetition_penalty:
+          type: number
+          format: float
+          minimum: 0.8
+          maximum: 2.0
+          default: 1.1
+        timestamp:
+          type: string
+          format: date-time
+          description: Optional client timestamp for logging.
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+          description: Generated therapeutic reply.
+        conversation_stats:
+          $ref: '#/components/schemas/ConversationStats'
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: Echoed timestamp if provided in the request.
+    ClearResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        conversation_stats:
+          $ref: '#/components/schemas/ConversationStats'
+    HistoryResponse:
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryMessage'
+        stats:
+          $ref: '#/components/schemas/ConversationStats'
+    SetHistoryRequest:
+      type: object
+      required:
+        - history
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryMessage'
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy]
+        model_info:
+          $ref: '#/components/schemas/ModelInfo'
+        conversation_stats:
+          $ref: '#/components/schemas/ConversationStats'
+    AppInfoResponse:
+      type: object
+      properties:
+        model_info:
+          $ref: '#/components/schemas/ModelInfo'
+        app_info:
+          type: object
+          properties:
+            name:
+              type: string
+            version:
+              type: string
+            flask_app_path:
+              type: string
+            model_type:
+              type: string
+    ModelInfo:
+      type: object
+      properties:
+        model_type:
+          type: string
+        model_path:
+          type: string
+        device:
+          type: string
+        quantization:
+          type: string
+        fine_tuning:
+          type: string
+        conversation_type:
+          type: string
+        offload_enabled:
+          type: boolean
+        adapter_type:
+          type: string
+          nullable: true
+        target_modules:
+          type: array
+          items:
+            type: string
+          nullable: true
+        base_model:
+          type: string
+          nullable: true
+    ConversationStats:
+      type: object
+      properties:
+        total_messages:
+          type: integer
+        user_messages:
+          type: integer
+        model_messages:
+          type: integer
+    HistoryMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [system, user, model, assistant]
+        content:
+          type: string
+      required:
+        - role
+        - content
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

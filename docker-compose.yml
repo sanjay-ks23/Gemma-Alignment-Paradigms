@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: "./Flask chat app"
+      dockerfile: Dockerfile
+      args:
+        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
+    container_name: gemma-backend
+    env_file:
+      - .env
+    environment:
+      FLASK_APP_PATH: /app
+      FLASK_TEMPLATE_PATH: /app/templates
+      FLASK_STATIC_PATH: /app/static
+      GEMMA_BASE_PATH: ${GEMMA_BASE_PATH:-/models}
+      GEMMA_MODEL_PATH: ${GEMMA_MODEL_PATH:-/models/gemma-3n}
+      GEMMA_ADAPTER_PATH: ${GEMMA_ADAPTER_PATH:-/models/gemma-3n}
+      GEMMA_OFFLOAD_DIR: ${GEMMA_OFFLOAD_DIR:-/offload}
+      HF_HOME: /cache/huggingface
+      TRANSFORMERS_CACHE: /cache/huggingface
+      BITSANDBYTES_NOWELCOME: "1"
+      BITSANDBYTES_FORCE_CPU: ${BITSANDBYTES_FORCE_CPU:-0}
+    volumes:
+      - ${HOST_MODEL_DIR:-./model-artifacts}:/models:ro
+      - backend_offload:/offload
+      - backend_cache:/cache/huggingface
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+    depends_on:
+      - neo4j
+      - vector-store
+  neo4j:
+    image: neo4j:5.23
+    container_name: gemma-neo4j
+    env_file:
+      - .env
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/local123}
+      - NEO4J_PLUGINS=["apoc","graph-data-science"]
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.coll.*,apoc.load.*,gds.*
+    ports:
+      - "${NEO4J_BOLT_PORT:-7687}:7687"
+    
+      - "${NEO4J_HTTP_PORT:-7474}:7474"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+  vector-store:
+    image: qdrant/qdrant:latest
+    container_name: gemma-qdrant
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+  frontend:
+    image: nginx:alpine
+    container_name: gemma-frontend
+    env_file:
+      - .env
+    environment:
+      - API_BASE_URL=${FRONTEND_API_URL:-http://backend:5000/api}
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend_offload:
+  backend_cache:
+  neo4j_data:
+  neo4j_logs:
+  qdrant_data:

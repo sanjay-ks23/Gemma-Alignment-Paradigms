@@ -18,9 +18,10 @@ model_loader = None
 chat_handler = None
 
 # Configuration
-FLASK_APP_PATH = "/home/sanj-ai/Documents/SlateMate/Gemma_4b_Finetuning/Flask_chat_app"
-TEMPLATE_PATH = os.path.join(FLASK_APP_PATH, "templates")
-STATIC_PATH = os.path.join(FLASK_APP_PATH, "static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FLASK_APP_PATH = os.environ.get("FLASK_APP_PATH", BASE_DIR)
+TEMPLATE_PATH = os.environ.get("FLASK_TEMPLATE_PATH", os.path.join(FLASK_APP_PATH, "templates"))
+STATIC_PATH = os.environ.get("FLASK_STATIC_PATH", os.path.join(FLASK_APP_PATH, "static"))
 
 # Update Flask template and static folders
 app.template_folder = TEMPLATE_PATH
