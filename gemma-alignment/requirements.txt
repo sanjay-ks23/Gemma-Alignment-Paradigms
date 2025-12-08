@@ -1,0 +1,33 @@
+# Core dependencies
+torch>=2.1.0
+transformers>=4.40.0
+peft>=0.10.0
+bitsandbytes>=0.43.0
+datasets>=2.18.0
+tokenizers>=0.15.0
+pyyaml>=6.0.1
+numpy>=1.24.0
+tqdm>=4.66.0
+scipy>=1.11.0
+accelerate>=0.28.0
+safetensors>=0.4.0
+
+# Evaluation dependencies
+rouge-score>=0.1.2
+bert-score>=0.3.13
+sacrebleu>=2.4.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+ruff>=0.3.0
+black>=24.0.0
+mypy>=1.8.0
+types-PyYAML>=6.0.12
+
+# API dependencies (optional)
+flask>=3.0.0
+gunicorn>=21.0.0
+
+# Logging (optional)
+wandb>=0.16.0
