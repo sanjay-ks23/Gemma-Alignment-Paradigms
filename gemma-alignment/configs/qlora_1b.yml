@@ -1,0 +1,42 @@
+# SFT + QLoRA on Gemma-3-1B
+#
+# Supervised Fine-Tuning with QLoRA (4-bit quantization + LoRA) on the 1B model.
+# Suitable for single GPU with 8-10GB VRAM.
+
+task: safety
+seed: 42
+device: auto
+
+model:
+  base_checkpoint: google/gemma-3-1b-it
+  size: 1b
+  peft_type: qlora
+  peft_rank: 16
+  peft_alpha: 32
+  peft_dropout: 0.1
+  peft_target_modules:
+    - q_proj
+    - v_proj
+    - k_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  load_in_4bit: true
+
+training:
+  mode: sft
+  epochs: 3
+  batch_size: 2
+  gradient_accumulation_steps: 8
+  learning_rate: 2.0e-4
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  max_seq_length: 512
+  bf16: true
+
+logging:
+  log_interval: 50
+  eval_interval: 250
+  output_dir: outputs/qlora_1b
+  checkpoint_dir: checkpoints/qlora_1b

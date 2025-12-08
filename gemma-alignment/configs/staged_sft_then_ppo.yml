@@ -1,0 +1,59 @@
+# Staged Training: SFT + LoRA -> PPO Refinement
+#
+# Two-phase training pipeline on Gemma-3-270M:
+# 1. Supervised Fine-Tuning with LoRA adapters
+# 2. PPO-based reinforcement learning refinement
+
+task: safety
+seed: 42
+device: auto
+
+model:
+  base_checkpoint: google/gemma-3-270m-it
+  size: 270m
+  peft_type: lora
+  peft_rank: 8
+  peft_alpha: 16
+  peft_dropout: 0.1
+  peft_target_modules:
+    - q_proj
+    - v_proj
+    - k_proj
+    - o_proj
+
+training:
+  mode: staged
+  epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_seq_length: 512
+  bf16: true
+
+rl:
+  algorithm: ppo
+  rollout_size: 32
+  num_ppo_epochs: 2
+  ppo_clip: 0.2
+  entropy_coeff: 0.01
+  kl_coef: 0.1
+
+reward:
+  type: hybrid
+  alpha: 0.5
+  beta: 0.5
+  normalize_rewards: true
+  heuristic:
+    toxicity_threshold: 0.3
+    toxicity_weight: 0.5
+  trainable:
+    hidden_size: 768
+    num_layers: 3
+
+logging:
+  log_interval: 50
+  eval_interval: 250
+  output_dir: outputs/staged_sft_ppo
+  checkpoint_dir: checkpoints/staged_sft_ppo
