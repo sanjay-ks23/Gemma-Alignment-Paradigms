@@ -1,111 +1,26 @@
-# Performance Report Template
+# Performance Report
 
-## Experiment Information
+## Experiment
 
 | Field | Value |
 |-------|-------|
-| Experiment ID | |
-| Date | |
-| Config File | |
+| Config | |
 | Model | |
-| Training Mode | |
+| Mode | |
 | Dataset | |
 
-## Training Summary
-
-### Configuration
-
-```yaml
-# Paste relevant config here
-```
-
-### Training Metrics
-
-| Epoch | Train Loss | Val Loss | Learning Rate |
-|-------|------------|----------|---------------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-
-### Resource Usage
+## Results
 
 | Metric | Value |
 |--------|-------|
-| Total Time | |
-| GPU Memory Peak | |
-| Total Steps | |
-| Samples/Second | |
+| Train Loss | |
+| Val Loss | |
+| Harmlessness | |
 
-## Evaluation Results
+## Comparison
 
-### Automatic Metrics
-
-| Metric | Value |
-|--------|-------|
-| Harmlessness Rate | |
-| ROUGE-L | |
-| BERTScore F1 | |
-
-### Per-paradigm Comparison
-
-| Paradigm | Primary Metric | Secondary Metric |
-|----------|----------------|------------------|
-| SFT | | |
-| RL | | |
-| Staged | | |
-
-## Sample Outputs
-
-### Example 1
-
-**Prompt:**
-```
-[Insert prompt]
-```
-
-**SFT Output:**
-```
-[Insert output]
-```
-
-**RL Output:**
-```
-[Insert output]
-```
-
-**Staged Output:**
-```
-[Insert output]
-```
-
-## Statistical Analysis
-
-### Paired Comparison
-
-| Comparison | Mean Diff | 95% CI | p-value |
-|------------|-----------|--------|---------|
-| SFT vs RL | | | |
-| SFT vs Staged | | | |
-| RL vs Staged | | | |
-
-## Observations
-
-### Strengths
-
-- 
-
-### Weaknesses
-
-- 
-
-### Recommendations
-
-- 
-
-## Checkpoints
-
-| Checkpoint | Path | Description |
-|------------|------|-------------|
-| Best | | |
-| Final | | |
-| LoRA | | |
+| Paradigm | Metric |
+|----------|--------|
+| SFT | |
+| RL | |
+| Staged | |
