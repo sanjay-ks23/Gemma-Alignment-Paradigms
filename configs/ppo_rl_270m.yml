@@ -1,0 +1,17 @@
+# PPO RL configuration
+
+model:
+  base_checkpoint: google/gemma-3-270m-it
+  peft_type: lora
+  peft_rank: 8
+
+training:
+  mode: rl
+  epochs: 2
+  batch_size: 2
+
+rl:
+  algorithm: ppo
+  rollout_size: 32
+  ppo_clip: 0.2
+  kl_coef: 0.1

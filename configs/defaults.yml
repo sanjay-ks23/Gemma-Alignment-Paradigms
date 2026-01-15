@@ -1,0 +1,52 @@
+# Default configuration for Gemma alignment experiments
+
+task: safety
+dataset_path: data/datasets
+seed: 42
+device: auto
+debug: false
+
+model:
+  base_checkpoint: google/gemma-3-270m-it
+  peft_type: lora
+  peft_rank: 8
+  peft_alpha: 16
+  peft_dropout: 0.1
+  peft_target_modules:
+    - q_proj
+    - v_proj
+    - k_proj
+    - o_proj
+
+training:
+  mode: sft
+  epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  learning_rate: 5e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  max_seq_length: 512
+  fp16: false
+  bf16: true
+
+rl:
+  algorithm: ppo
+  rollout_size: 64
+  num_ppo_epochs: 4
+  ppo_clip: 0.2
+  entropy_coeff: 0.01
+  kl_coef: 0.1
+  dpo_beta: 0.1
+
+reward:
+  type: hybrid
+  alpha: 0.5
+  beta: 0.5
+
+logging:
+  wandb_enabled: false
+  log_interval: 50
+  output_dir: outputs
+  checkpoint_dir: checkpoints
